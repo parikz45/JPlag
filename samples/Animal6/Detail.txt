@@ -1,0 +1,5 @@
+prog1 - Exact Copy of the program.
+prog2 - Renaming of variables.
+prog3 - Insertion of dead code.
+prog4 - Reordering of Independent statements.
+prog5 - Expansion of statements.
