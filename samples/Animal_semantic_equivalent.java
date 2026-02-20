@@ -1,7 +1,12 @@
 import java.util.List;
 import java.util.Random;
 
-//EXACT COPY
+/**
+ * Obfuscation :
+ * 12) Revert Negated If-Else
+ * 13) Revert If-Unequal Else
+ * 14) For Loop -> While Loop
+ */
 /**
  * A class representing shared characteristics of animals.
  */
@@ -73,24 +78,41 @@ public abstract class Animal extends Organism {
 
         if (isAlive()) {
             // if the animal is female and the weatrher is suitable for birth
-            if (!male && canBreed(weather)) {
-                // call the giveBirth method
-                giveBirth(newAnimals);
+            /*
+             * ==============================
+             * 12) REVERT NEGATED IF-ELSE
+             * Original: if(!male)
+             * ==============================
+             */
+            if (male) {
+                // do nothing
+            } else {
+                if (canBreed(weather)) {
+                    giveBirth(newAnimals);
+                }
             }
             // if the weather is suitable for moving
             if (canMove(weather)) {
                 // Move towards a source of food if found.
                 Location newLocation = findFood();
-                if (newLocation == null) {
-                    // No food found - try to move to a free location.
-                    newLocation = getField().freeAdjacentLocation(getLocation());
+                /*
+                 * ==============================
+                 * 13) REVERT INEQUALITY IF-ELSE
+                 * Original: if(newLocation == null)
+                 * ==============================
+                 */
+                if (newLocation != null) {
+                    // do nothing
+                } else {
+                    newLocation = getField()
+                            .freeAdjacentLocation(getLocation());
                 }
                 // See if it was possible to move.
-                if (newLocation != null) {
-                    setLocation(newLocation);
+                if (newLocation == null) {
+                    setDead();
                 } else {
                     // Overcrowding.
-                    setDead();
+                    setLocation(newLocation);
                 }
             }
         }
@@ -101,7 +123,15 @@ public abstract class Animal extends Organism {
      */
     protected void incrementHunger() {
         foodLevel--;
-        if (foodLevel <= 0) {
+        /*
+         * ==============================
+         * 13) REVERT INEQUALITY
+         * Original: if(foodLevel <= 0)
+         * ==============================
+         */
+        if (foodLevel > 0) {
+            // continue
+        } else {
             setDead();
         }
     }
@@ -126,7 +156,13 @@ public abstract class Animal extends Organism {
         int births = 0;
         // get the nearby locations
         List<Location> animalLocations = field.adjacentLocations(getLocation());
-        for (int i = 0; i < animalLocations.size(); i++) {
+        /*
+         * ==============================
+         * 14) FOR -> WHILE LOOP
+         * ==============================
+         */
+        int i = 0;
+        while (i < animalLocations.size()) {
             // get the organism at the current field
             Organism organism = (Organism) field.getObjectAt(animalLocations.get(i));
             // if the organism is an animal
@@ -161,6 +197,7 @@ public abstract class Animal extends Organism {
                     break;
                 }
             }
+            i++; // iteration moved to end
         }
         return births;
     }
@@ -174,13 +211,18 @@ public abstract class Animal extends Organism {
     protected boolean checkInfected(double probability) {
         Random rand = new Random();
         // if the probability of getting infected is less than a random double
-        if (rand.nextDouble() <= probability && !isInfected()) {
-            // infect the animal
+        /*
+         * ==============================
+         * 13) REVERT INEQUALITY
+         * Original: if(rand.nextDouble() <= probability)
+         * ==============================
+         */
+        if (rand.nextDouble() > probability || isInfected()) {
+            return false;
+        } else {
             infected = true;
             return infected;
         }
-        // otherwise do not infect the animal
-        return false;
     }
 
     /**

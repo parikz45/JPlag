@@ -1,11 +1,12 @@
+
+//EXTRACT ELEMENTS OBFUSCATION
 import java.util.List;
 import java.util.Random;
 
-//EXACT COPY
 /**
  * A class representing shared characteristics of animals.
  */
-public abstract class Animal extends Organism {
+public abstract class Animal_extract_elements extends Organism {
     Random rand;
     // The food level of the animal
     private int foodLevel;
@@ -24,6 +25,13 @@ public abstract class Animal extends Organism {
 
     // Probability of the animal being infected
     protected double infectionProbability;
+    /*
+     * ==============================
+     * SINGLE-USE CONSTANT
+     * (will be inlined later)
+     * ==============================
+     */
+    private static final int SINGLE_OFFSET = 1;
 
     /**
      * Create a new animal at location in field.
@@ -32,7 +40,7 @@ public abstract class Animal extends Organism {
      * @param location The location within the field.\
      *                 other @params set the fields to their repspective values
      */
-    public Animal(boolean randomAge, Field field, Location location, int maxAge, int maxFoodValue, int breedingAge,
+    public Animal_extract_elements(boolean randomAge, Field field, Location location, int maxAge, int maxFoodValue, int breedingAge,
             double breedingProbability, int litterSize, double infectionProbability, Random rand) {
         super(randomAge, field, location, maxAge, rand);
         // set the field
@@ -63,14 +71,31 @@ public abstract class Animal extends Organism {
         // At the start the animal has not bred with anyone
         hasBred = false;
         incrementAge();
-        incrementHunger();
-
+        // incrementHunger();
+        /*
+         * ==============================
+         * INLINE SINGLE-USE VARIABLE
+         * Original:
+         * int hungerDrop = 1;
+         * foodLevel -= hungerDrop;
+         * ==============================
+         */
+        if (--foodLevel <= 0) { // variable inlined
+            setDead();
+        }
         // Check if the animal has caught an infection
-        if (checkInfected(infectionProbability)) {
-            // and if the animal has, infect that animal
+        /*
+         * ==============================
+         * INLINE OPTIONAL VALUE
+         * Original:
+         * Optional<Double> p = Optional.of(infectionProbability);
+         * if(rand.nextDouble() <= p.orElse(0.0))
+         * ==============================
+         */
+        if (rand.nextDouble() <= Optional.of(infectionProbability)
+                .orElse(0.0) && !isInfected()) {
             infect();
         }
-
         if (isAlive()) {
             // if the animal is female and the weatrher is suitable for birth
             if (!male && canBreed(weather)) {
@@ -81,9 +106,16 @@ public abstract class Animal extends Organism {
             if (canMove(weather)) {
                 // Move towards a source of food if found.
                 Location newLocation = findFood();
+                /*
+                 * ==============================
+                 * INLINE OPTIONAL
+                 * ==============================
+                 */
                 if (newLocation == null) {
-                    // No food found - try to move to a free location.
-                    newLocation = getField().freeAdjacentLocation(getLocation());
+                    newLocation = Optional
+                            .ofNullable(newLocation)
+                            .orElse(getField()
+                                    .freeAdjacentLocation(getLocation()));
                 }
                 // See if it was possible to move.
                 if (newLocation != null) {
@@ -130,8 +162,8 @@ public abstract class Animal extends Organism {
             // get the organism at the current field
             Organism organism = (Organism) field.getObjectAt(animalLocations.get(i));
             // if the organism is an animal
-            if (organism instanceof Animal) {
-                Animal animal = (Animal) organism;
+            if (organism instanceof Animal_extract_elements) {
+                Animal_extract_elements animal = (Animal_extract_elements) organism;
                 /*
                  * if the partner has the same class as the current one
                  * and the partner is male
@@ -157,7 +189,8 @@ public abstract class Animal extends Organism {
                     } else if (isInfected() && !animal.isInfected()) {
                         animal.infect();
                     }
-                    births = rand.nextInt(litterSize) + 1;
+                    // INLINE CONSTANT
+                    births = rand.nextInt(litterSize) + SINGLE_OFFSET;
                     break;
                 }
             }

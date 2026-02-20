@@ -1,0 +1,10 @@
+P1 -rename variables
+P2 -rename variables and some dead code
+P3 -Constructor if–else → Ternary and breed() condition → Ternary
+P4 -variables  renamed and for loop converted to while
+P5 -variables renamed and some statements reordered
+P6 -identifiers renamed...and logical negation rewrite and some deadcode added
+P7 -for loop converted to while,,some deadcode added ..some variables renamed
+P8 -some Method Extracted and Dead Code added
+p9 -STATEMENTS REORDERED AND FOR LOOP CONVERTED TO WHILE
+P10 - Original program
