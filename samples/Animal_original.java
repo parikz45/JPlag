@@ -1,7 +1,7 @@
 import java.util.List;
 import java.util.Random;
 
-//EXACT COPY
+//ORIGINAL
 /**
  * A class representing shared characteristics of animals.
  */

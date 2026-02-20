@@ -1,7 +1,12 @@
 import java.util.List;
 import java.util.Random;
 
-//EXACT COPY
+/**
+ * Obfuscation:
+ * 1. Getter methods added
+ * 2. Unsupported methods added
+ * 3. Unsupported constructors added
+ */
 /**
  * A class representing shared characteristics of animals.
  */
@@ -32,6 +37,24 @@ public abstract class Animal extends Organism {
      * @param location The location within the field.\
      *                 other @params set the fields to their repspective values
      */
+
+    /*
+     * =====================================
+     * OBFUSCATION: UNSUPPORTED CONSTRUCTORS
+     * =====================================
+     */
+
+    public Animal(int dummy) {
+        // constructor that always throws exception
+        throw new UnsupportedOperationException(
+                "Not supported yet.");
+    }
+
+    public Animal(String config) {
+        throw new UnsupportedOperationException(
+                "Configuration not supported.");
+    }
+
     public Animal(boolean randomAge, Field field, Location location, int maxAge, int maxFoodValue, int breedingAge,
             double breedingProbability, int litterSize, double infectionProbability, Random rand) {
         super(randomAge, field, location, maxAge, rand);
@@ -240,7 +263,63 @@ public abstract class Animal extends Organism {
     protected boolean isMale() {
         return male;
     }
+    /*
+     * =====================================
+     * OBFUSCATION: GETTER METHODS
+     * (Return only fields or constants)
+     * =====================================
+     */
 
+    public int getFoodLevel() {
+        return foodLevel; // getter added
+    }
+
+    public boolean getGenderFlag() {
+        return male;
+    }
+
+    public int getBreedingAge() {
+        return breedingAge;
+    }
+
+    public double getBreedingProbability() {
+        return breedingProbability;
+    }
+
+    public int getLitterSize() {
+        return litterSize;
+    }
+
+    public boolean getInfectionState() {
+        return infected;
+    }
+
+    public double getDefaultInfectionConstant() {
+        return 0.5; // constant getter
+    }
+
+    /*
+     * =====================================
+     * OBFUSCATION: UNSUPPORTED METHODS
+     * =====================================
+     */
+
+    public void unsupportedOperation() {
+        throw new UnsupportedOperationException(
+                "Operation not implemented.");
+    }
+
+    public int advancedBreedingModel() {
+        throw new UnsupportedOperationException(
+                "Advanced model not available.");
+    }
+
+    public boolean simulateMutation() {
+        throw new UnsupportedOperationException(
+                "Mutation simulation disabled.");
+    }
+
+    /* ===================================== */
     /**
      * Abstract methods called in the subclasses
      */

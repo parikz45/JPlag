@@ -1,7 +1,14 @@
+
+//INSERTION TYPE-1
 import java.util.List;
 import java.util.Random;
 
-//EXACT COPY
+/**
+ * Obfuscation Type:
+ * - Empty methods added
+ * - Empty constructors added
+ * - Empty inner classes added
+ */
 /**
  * A class representing shared characteristics of animals.
  */
@@ -32,6 +39,29 @@ public abstract class Animal extends Organism {
      * @param location The location within the field.\
      *                 other @params set the fields to their repspective values
      */
+    /*
+     * 
+     * ==============================
+     * OBFUSCATION: EMPTY INNER CLASS
+     * ==============================
+     */
+    private static class DebugHelper {
+        // Empty class added for structural noise
+    }
+
+    private class Logger {
+        // Another empty inner class
+    }
+
+    /*
+     * ==============================
+     * OBFUSCATION: EMPTY CONSTRUCTOR
+     * ==============================
+     */
+    protected Animal() {
+        // Dummy empty constructor (never used)
+    }
+
     public Animal(boolean randomAge, Field field, Location location, int maxAge, int maxFoodValue, int breedingAge,
             double breedingProbability, int litterSize, double infectionProbability, Random rand) {
         super(randomAge, field, location, maxAge, rand);
@@ -48,6 +78,12 @@ public abstract class Animal extends Organism {
         }
         // randomnly select if the animal is male or female
         male = rand.nextBoolean();
+        /*
+         * ==============================
+         * OBFUSCATION: EMPTY METHOD CALL
+         * ==============================
+         */
+        initializeNoise();
     }
 
     /**
@@ -64,7 +100,8 @@ public abstract class Animal extends Organism {
         hasBred = false;
         incrementAge();
         incrementHunger();
-
+        /* OBFUSCATION: NO-OP METHOD */
+        debugStep();
         // Check if the animal has caught an infection
         if (checkInfected(infectionProbability)) {
             // and if the animal has, infect that animal
@@ -94,6 +131,8 @@ public abstract class Animal extends Organism {
                 }
             }
         }
+        /* OBFUSCATION: DUMMY METHOD */
+        postProcess();
     }
 
     /**
@@ -239,6 +278,23 @@ public abstract class Animal extends Organism {
      */
     protected boolean isMale() {
         return male;
+    }
+    /*
+     * ==============================
+     * OBFUSCATION: EMPTY METHODS
+     * ==============================
+     */
+
+    private void initializeNoise() {
+        // intentionally empty
+    }
+
+    private void debugStep() {
+        // no operation
+    }
+
+    protected void postProcess() {
+        // empty hook method
     }
 
     /**

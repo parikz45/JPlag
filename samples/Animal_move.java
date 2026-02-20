@@ -1,7 +1,22 @@
 import java.util.List;
 import java.util.Random;
 
-//EXACT COPY
+/**
+ * OBFUSCATION:
+ * Constants used only in Animal,
+ * but declared in a separate class.
+ */
+public final class AnimalConstants {
+
+    public static final int MAX_INFECTION_SCALE = 4;
+    public static final int BREEDING_OFFSET = 1;
+    public static final int MIN_FOOD = 0;
+
+    private AnimalConstants() {
+        // prevent instantiation
+    }
+}
+
 /**
  * A class representing shared characteristics of animals.
  */
@@ -101,7 +116,11 @@ public abstract class Animal extends Organism {
      */
     protected void incrementHunger() {
         foodLevel--;
-        if (foodLevel <= 0) {
+        /*
+         * MINIMAL CHANGE:
+         * replaced literal 0
+         */
+        if (foodLevel <= AnimalConstants.MIN_FOOD) {
             setDead();
         }
     }
@@ -157,7 +176,12 @@ public abstract class Animal extends Organism {
                     } else if (isInfected() && !animal.isInfected()) {
                         animal.infect();
                     }
-                    births = rand.nextInt(litterSize) + 1;
+                    /*
+                     * MINIMAL CHANGE:
+                     * replaced +1
+                     */
+                    births = rand.nextInt(litterSize)
+                            + AnimalConstants.BREEDING_OFFSET;
                     break;
                 }
             }
@@ -197,7 +221,12 @@ public abstract class Animal extends Organism {
      * And have a lower food level
      */
     protected void infect() {
-        int scale = rand.nextInt(4) + 1;
+        /*
+         * MINIMAL CHANGE:
+         * replaced 4
+         */
+        int scale = rand.nextInt(
+                AnimalConstants.MAX_INFECTION_SCALE) + 1;
         int currentAge = scale * getAge();
         setAge(currentAge);
         foodLevel = (int) foodLevel / scale;
