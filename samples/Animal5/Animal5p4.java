@@ -107,7 +107,7 @@ public abstract class Animal extends Actor
     
     protected boolean canBreed()
     {
-        return age < BREEDING_AGE;
+        return !(age < BREEDING_AGE);
     }
 
     
