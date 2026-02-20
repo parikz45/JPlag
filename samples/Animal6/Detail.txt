@@ -3,3 +3,7 @@ prog2 - Renaming of variables.
 prog3 - Insertion of dead code.
 prog4 - Reordering of Independent statements.
 prog5 - Expansion of statements.
+prog6 - Changing the access specifiers.
+prog7 - Restructuring of loops.
+prog8 - Changing if statements to switch statements.
+prog9 - Changing if to switch and dead code insertion and changing loop structures.

@@ -1,0 +1,439 @@
+import java.util.List;
+import java.util.Random;
+import java.util.Iterator;
+
+/**
+ * A class representing shared characteristics of animals.
+ *
+ * @version 2019.02.20
+ */
+public abstract class Animal implements Actor
+{
+    // Whether the animal is alive or not.
+    private boolean alive;
+    // The animal's field.
+    private Field field;
+    // The plant's field.
+    private Field plantField;
+    // The animal's position in the field.
+    private Location location;
+    // A shared random generator.
+    private static final Random rand = Randomizer.getRandom();
+    //The animal's gender.
+    private boolean isMale;
+    // The animal's age.
+    private int age;
+    // A timer to keep track of day and night.
+    private Timer timer;
+    // Number of animals infected.
+    private int infectedNumber = 0;
+
+    // The animal's food level, increased when eating prey or plants.
+    private int foodLevel;
+    //Whether the animal is infected.
+    private boolean infected;
+    // An instance of the ChronicDisease class
+    private ChronicDisease disease;
+
+    /**
+     * Create a new animal at location in field.
+     *
+     * @param field The field currently occupied.
+     * @param location The location within the field.
+     */
+    public Animal(Field field, Location location, Timer timer)
+    {
+        alive = true;
+        isMale = rand.nextBoolean();
+
+        disease = new ChronicDisease();
+        infected = disease.randInfected();
+
+        this.field = field;
+        setLocation(location);
+        this.timer = timer;
+    }
+
+    /**
+     * This is what animals do most of the time - they move around
+     * and eat.
+     * Sometimes they will spread disease, breed, or die of old age.
+     * @param newActors A list to return newly born actors.
+     */
+    public void act(List<Actor> newActors)
+    {
+        incrementAge();
+        incrementHunger();
+        if(isDay() || rand.nextDouble() <= getMovementProbability()){
+            if(isActive()) {
+                // Changed: if(infected) converted to switch on boolean
+                switch(Boolean.toString(infected)) {
+                    case "true":
+                        spreadDisease();
+                        disease.act();
+                        // Changed: if(disease.diseased()) converted to switch
+                        switch(Boolean.toString(disease.diseased())) {
+                            case "true":
+                                // Killed by disease.
+                                setDead();
+                                return;
+                            default:
+                                break;
+                        }
+                        break;
+                    default:
+                        break;
+                }
+
+                giveBirth(newActors);
+                // Move towards a source of food if found.
+                Location newLocation = findFood();
+
+                // Changed: if(newLocation == null) converted to switch
+                switch(Boolean.toString(newLocation == null)) {
+                    case "true":
+                        // No food found - try to move to a free location.
+                        newLocation = getField().freeAdjacentLocation
+                            (getLocation());
+                        break;
+                    default:
+                        break;
+                }
+
+                // Changed: if(newLocation != null) ... else converted to switch
+                switch(Boolean.toString(newLocation != null)) {
+                    case "true":
+                        // See if it was possible to move.
+                        setLocation(newLocation);
+                        break;
+                    default:
+                        // Overcrowding.
+                        setDead();
+                        break;
+                }
+            }
+        }
+    }
+
+    /**
+     * @return Movement probability at night for each animal.
+     */
+    abstract protected double getMovementProbability();
+
+    /**
+     * Check whether the animal is alive or not.
+     * @return true if the animal is still alive.
+     */
+    public boolean isActive()
+    {
+        return alive;
+    }
+
+    /**
+     * Spread the disease to the animals of the same species in the
+     * neighboring locations.
+     */
+    private void spreadDisease()
+    {
+        if(rand.nextDouble() <= disease.getSpreadProbability()){
+            Field field = getField();
+            List<Location> adjacent = field.perimeterLocations
+                (getLocation(), -1, 1);
+            Iterator<Location> it = adjacent.iterator();
+            while(it.hasNext()) {
+                Location where = it.next();
+                Object actor = field.getObjectAt(where);
+
+                // Changed: if(actor instanceof Animal) converted to switch
+                // using the class name of the object for switching
+                String actorType = (actor != null) ? 
+                    actor.getClass().getSuperclass() != null && 
+                    actor instanceof Animal ? "Animal" : "Other" : "null";
+
+                switch(actorType) {
+                    case "Animal":
+                        Animal animal = (Animal) actor;
+                        // Changed: if(getClass().equals(...)) converted to switch
+                        switch(Boolean.toString(
+                            getClass().equals(animal.getClass()))) {
+                            case "true":
+                                // Spread the disease.
+                                animal.setInfected();
+                                break;
+                            default:
+                                break;
+                        }
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+    }
+
+    /**
+     * Set variable infected to true.
+     */
+    private void setInfected()
+    {
+        infected = true;
+    }
+
+    /**
+     * Check whether or not this animal is to give birth at this step.
+     * New births will be made into free adjacent locations.
+     * @param newAnimals A list to return newly born animals.
+     */
+    protected void giveBirth(List<Actor> newAnimals)
+    {
+        // New animals are born into adjacent locations.
+        // Get a list of adjacent free locations.
+        Field field = getField();
+        List<Location> free = field.getFreeAdjacentLocations
+            (getLocation());
+        int births = breed();
+        for(int b = 0; b < births && free.size() > 0; b++) {
+            Location loc = free.remove(0);
+            newAnimals.add(createAnimal(false, field, loc));
+        }
+    }
+
+    /**
+     * Generate a number representing the number of births,
+     * if it can breed.
+     * @return The number of births (may be zero).
+     */
+    private int breed()
+    {
+        int births = 0;
+        if(canBreed() && oppositeGender() &&
+        rand.nextDouble() <= getBreedingProb()) {
+            births = rand.nextInt(getMaxLitterSz()) + 1;
+        }
+        return births;
+    }
+
+    /**
+     * An animal can breed if it has reached the breeding age and it is
+     * not infected by the disease.
+     *
+     * @return true if the animal can breed, false otherwise.
+     */
+    protected boolean canBreed()
+    {
+        return (age >= getBreedingAge() && !infected);
+    }
+
+    /**
+     * An animal can breed only if it has an animal of opposite gender
+     * nearby.
+     */
+    protected boolean oppositeGender()
+    {
+        Field field = getField();
+        List<Location> adjacentAnimal = field.perimeterLocations
+            (getLocation(), -1, 1);
+        Iterator<Location> it = adjacentAnimal.iterator();
+        while(it.hasNext()) {
+            Location where = it.next();
+            Object actor = field.getObjectAt(where);
+
+            // Changed: if(actor instanceof Animal) converted to switch
+            String actorType = (actor instanceof Animal) ? "Animal" : "Other";
+            switch(actorType) {
+                case "Animal":
+                    Animal animal = (Animal) actor;
+                    // Changed: if(getClass().equals(...)) converted to switch
+                    switch(Boolean.toString(
+                        getClass().equals(animal.getClass()))) {
+                        case "true":
+                            return isMale() != animal.isMale();
+                        default:
+                            break;
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * @return The animal's field.
+     */
+    protected Field getField()
+    {
+        return field;
+    }
+
+    /**
+     * @return The animal's location.
+     */
+    protected Location getLocation()
+    {
+        return location;
+    }
+
+    /**
+     * Indicate that the animal is no longer alive.
+     * It is removed from the field.
+     */
+    protected void setDead()
+    {
+        alive = false;
+        // Changed: if(location != null) converted to switch
+        switch(Boolean.toString(location != null)) {
+            case "true":
+                field.clear(location);
+                location = null;
+                field = null;
+                break;
+            default:
+                break;
+        }
+    }
+
+    /**
+     * Look for either plants or prey adjacent to the current location.
+     * @return Where food was found, or null if it wasn't.
+     */
+    abstract protected Location findFood();
+
+    /**
+     * Place the animal at the new location in the given field.
+     * @param newLocation The animal's new location.
+     */
+    public void setLocation(Location newLocation)
+    {
+        // Changed: if(location != null) converted to switch
+        switch(Boolean.toString(location != null)) {
+            case "true":
+                field.clear(location);
+                break;
+            default:
+                break;
+        }
+        location = newLocation;
+        field.place(this, newLocation);
+    }
+
+    /**
+     * Create new animal.
+     * @param randomAge If true, the animal will have a random age,
+     * age 0 otherwise.
+     * @param field The field.
+     * @param location The location for the new animal.
+     */
+    abstract protected Animal createAnimal(boolean randomAge,
+    Field field, Location location);
+
+    /**
+     * @return The maximum age of the animal.
+     */
+    abstract protected int getMaxAge();
+
+    /**
+     * @return The breeding age of the animal.
+     */
+    abstract protected int getBreedingAge();
+
+    /**
+     * Increase the age. This could result in the animal's death.
+     */
+    protected void incrementAge()
+    {
+        age++;
+        // Changed: if(age > getMaxAge()) converted to switch
+        switch(Boolean.toString(age > getMaxAge())) {
+            case "true":
+                setDead();
+                break;
+            default:
+                break;
+        }
+    }
+
+    /**
+     * return Maximum number of offspring from this animal.
+     */
+    abstract protected int getMaxLitterSz();
+
+    /**
+     * return The breeding probability of this animal.
+     */
+    abstract protected double getBreedingProb();
+
+    /**
+     * Make this animal more hungry. This could result in the animal's
+     * death.
+     */
+    protected void incrementHunger()
+    {
+        foodLevel--;
+        // Changed: if(foodLevel <= 0) converted to switch
+        switch(Boolean.toString(foodLevel <= 0)) {
+            case "true":
+                setDead();
+                break;
+            default:
+                break;
+        }
+    }
+
+    protected boolean isDay()
+    {
+        return timer.isDay();
+    }
+
+    /**
+     * @return Common timer.
+     */
+    protected Timer getTimer()
+    {
+        return timer;
+    }
+
+    /**
+     * Check whether the animal is male or female.
+     * @return true if the animal is male, false if it is female.
+     */
+    protected boolean isMale()
+    {
+        return isMale;
+    }
+
+    /**
+     * @return The animal's age.
+     */
+    protected int getAge()
+    {
+        return age;
+    }
+
+    /**
+     * Set the age of the animal.
+     * @param age The age to be set to.
+     */
+    protected void setAge(int age)
+    {
+        this.age = age;
+    }
+
+    /**
+     * @return The animal's food level.
+     */
+    protected int getFoodLevel()
+    {
+        return foodLevel;
+    }
+
+    /**
+     * Set the food level of the animal.
+     * @param foodLevel The food level to be set to.
+     */
+    protected void setFoodLevel(int foodLevel)
+    {
+        this.foodLevel = foodLevel;
+    }
+}
